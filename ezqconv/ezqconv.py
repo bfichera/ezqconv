@@ -141,3 +141,8 @@ class Experiment:
         else:
             ang = args
         return self.experiment.Ang2HKL(*ang, mat=self.crystal)
+
+    def hkl2q(self, *hkl):
+        if not isinstance(hkl[0], tuple):
+            hkl = tuple(hkl)
+        return self.crystal.Q(*hkl)
