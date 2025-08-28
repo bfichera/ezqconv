@@ -4,3 +4,4 @@ build/
 venv/
 *.pyc
 *.sw*
+__version__.py
