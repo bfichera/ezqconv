@@ -1,0 +1,16 @@
+[project]
+name = "ezqconv"
+authors = [
+    {name = "Bryan Fichera", email="bfichera@anl.gov"},
+]
+dynamic = ["version"]
+dependencies = [
+    'numpy', 'xrayutilities', 'pint'
+]
+
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "ezqconv/__version__.py"
