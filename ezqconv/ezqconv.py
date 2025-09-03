@@ -87,6 +87,12 @@ class Experiment:
         center = np.array([center_i, center_j])
         ind = np.indices(shape)
         pval = (ind - center[:, np.newaxis, np.newaxis]) * self.pixel_width
+        if np.array_equal(self.axis_of_det, (1, 0)):
+            pval = np.roll(pval, 1, axis=0)
+        elif np.array_equal(self.axis_of_det, (0, 1)):
+            pass
+        else:
+            raise NotImplementedError('Only 2 detector axes implemented')
         pangs = np.zeros(
             (self.num_sample_axes + self.num_detector_axes, *shape)
         )
@@ -95,8 +101,6 @@ class Experiment:
             np.newaxis,
             np.newaxis,
         ]
-        if np.array_equal(self.axis_of_det, (1, 0)):
-            pval = np.swapaxes(pval, 0, 1)
         pangs[self.num_sample_axes:, :, :] = (
             ang_hkl[self.num_sample_axes:, np.newaxis, np.newaxis] + np.arctan(
                 (pval / self.sample_detector_distance)
@@ -167,4 +171,3 @@ class Experiment:
         else:
             q = args
         return self.crystal.HKL(q)
-    
