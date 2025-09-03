@@ -27,6 +27,7 @@ class Experiment:
         sampleor: str,
         bounds: tuple[float] | None = None,
         startvalues: tuple[float] | None = None,
+        axis_of_det: tuple[int] | None = None,
     ) -> typing.Self:
 
         # We assume for now that the detector axes are listed in order of the
@@ -74,6 +75,10 @@ class Experiment:
                 for ax in range(self.num_sample_axes + self.num_detector_axes)
             )
 
+        self.axis_of_det = axis_of_det
+        if self.axis_of_det is None:
+            self.axis_of_det = list(range(self.num_detector_axes))
+
     def _shape2q_by_hkl(
         self, center_hkl: tuple[float], shape: tuple[int], center_i: int,
         center_j: int
@@ -90,6 +95,8 @@ class Experiment:
             np.newaxis,
             np.newaxis,
         ]
+        if np.array_equal(self.axis_of_det, (1, 0)):
+            pval = np.swapaxes(pval, 0, 1)
         pangs[self.num_sample_axes:, :, :] = (
             ang_hkl[self.num_sample_axes:, np.newaxis, np.newaxis] + np.arctan(
                 (pval / self.sample_detector_distance)
@@ -97,7 +104,7 @@ class Experiment:
         )
         q = np.array(
             [
-                self.crystal.Q(self.ang2hkl(*p))
+                self.ang2q(*p)
                 for p in pangs.reshape(3, -1).transpose()
             ]
         ).transpose().reshape((3, *shape))
@@ -146,3 +153,18 @@ class Experiment:
         if not isinstance(hkl[0], tuple):
             hkl = tuple(hkl)
         return self.crystal.Q(*hkl)
+
+    def ang2q(self, *args) -> tuple[float]:
+        if isinstance(args[0], tuple):
+            ang = args[0]
+        else:
+            ang = args
+        return self.hkl2q(self.ang2hkl(ang))
+
+    def q2hkl(self, *args) -> tuple[float]:
+        if isinstance(args[0], tuple):
+            q = args[0]
+        else:
+            q = args
+        return self.crystal.HKL(q)
+    
