@@ -1,8 +1,8 @@
 import typing
 
 import numpy as np
-from numpy.typing import NDArray
 import xrayutilities as xu
+from numpy.typing import NDArray
 from pint import Quantity as Q_
 
 
@@ -18,17 +18,17 @@ class Experiment:
         gamma: float,
         sample_detector_distance_meters: float,
         pixel_width_microns: float,
-        sample_axis: tuple[str],
-        detector_axis: tuple[str],
-        r_i: tuple[float],
+        sample_axis: tuple[str, ...],
+        detector_axis: tuple[str, ...],
+        r_i: tuple[float, float, float],
         en: float,
-        ipdir_hkl: tuple[float],
-        ndir_hkl: tuple[float],
+        ipdir_hkl: tuple[float, float, float],
+        ndir_hkl: tuple[float, float, float],
         sampleor: str,
-        bounds: tuple[float] | None = None,
-        startvalues: tuple[float] | None = None,
-        axis_of_det: tuple[int] | None = None,
-    ) -> typing.Self:
+        bounds: tuple[float, ...] | None = None,
+        startvalues: tuple[float, ...] | None = None,
+        axis_of_det: tuple[int, int] | None = None,
+    ) -> None:
 
         # We assume for now that the detector axes are listed in order of the
         # shape of the detector array, and that increasing index is increasing

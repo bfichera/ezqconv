@@ -2,6 +2,7 @@ test.py
 build/
 *.egg-info/
 venv/
+.venv/
 *.pyc
 *.sw*
 __version__.py
