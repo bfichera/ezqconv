@@ -1,5 +1,3 @@
-import typing
-
 import numpy as np
 import xrayutilities as xu
 from numpy.typing import NDArray
@@ -7,6 +5,9 @@ from pint import Quantity as Q_
 
 
 class Experiment:
+    """Experiment.
+    """
+
 
     def __init__(
         self,
@@ -29,6 +30,31 @@ class Experiment:
         startvalues: tuple[float, ...] | None = None,
         axis_of_det: tuple[int, int] | None = None,
     ) -> None:
+        """__init__.
+
+        Args:
+            a (float): a
+            b (float): b
+            c (float): c
+            alpha (float): alpha
+            beta (float): beta
+            gamma (float): gamma
+            sample_detector_distance_meters (float): sample_detector_distance_meters
+            pixel_width_microns (float): pixel_width_microns
+            sample_axis (tuple[str, ...]): sample_axis
+            detector_axis (tuple[str, ...]): detector_axis
+            r_i (tuple[float, float, float]): r_i
+            en (float): en
+            ipdir_hkl (tuple[float, float, float]): ipdir_hkl
+            ndir_hkl (tuple[float, float, float]): ndir_hkl
+            sampleor (str): sampleor
+            bounds (tuple[float, ...] | None): bounds
+            startvalues (tuple[float, ...] | None): startvalues
+            axis_of_det (tuple[int, int] | None): axis_of_det
+
+        Returns:
+            None:
+        """
 
         # We assume for now that the detector axes are listed in order of the
         # shape of the detector array, and that increasing index is increasing
@@ -43,7 +69,7 @@ class Experiment:
         lat = xu.materials.SGLattice(1, a, b, c, alpha, beta, gamma)
         self.crystal = xu.materials.Crystal(name=name, lat=lat)
 
-        r_i = np.array(r_i)
+        r_i: NDArray = np.array(r_i)
         self.qconv = xu.experiment.QConversion(
             sampleAxis=sample_axis, detectorAxis=detector_axis, r_i=r_i, en=en
         )
@@ -65,14 +91,14 @@ class Experiment:
         if self.bounds is None:
             self.bounds = tuple(
                 (-90.0, 90.0)
-                for ax in range(self.num_sample_axes + self.num_detector_axes)
+                for _ in range(self.num_sample_axes + self.num_detector_axes)
             )
 
         self.startvalues = startvalues
         if self.startvalues is None:
             self.bounds = tuple(
                 20.0
-                for ax in range(self.num_sample_axes + self.num_detector_axes)
+                for _ in range(self.num_sample_axes + self.num_detector_axes)
             )
 
         self.axis_of_det = axis_of_det
@@ -83,13 +109,24 @@ class Experiment:
         self, center_hkl: tuple[float], shape: tuple[int], center_i: int,
         center_j: int
     ) -> NDArray:
-        ang_hkl = self.hkl2ang(center_hkl)
+        """_shape2q_by_hkl.
+
+        Args:
+            center_hkl (tuple[float]): center_hkl
+            shape (tuple[int]): shape
+            center_i (int): center_i
+            center_j (int): center_j
+
+        Returns:
+            NDArray:
+        """
+        ang_hkl = np.array(self.hkl2ang(center_hkl))
         center = np.array([center_i, center_j])
         ind = np.indices(shape)
         pval = (ind - center[:, np.newaxis, np.newaxis]) * self.pixel_width
-        if np.array_equal(self.axis_of_det, (1, 0)):
+        if self.axis_of_det == (1, 0):
             pval = np.roll(pval, 1, axis=0)
-        elif np.array_equal(self.axis_of_det, (0, 1)):
+        elif self.axis_of_det == (0, 1):
             pass
         else:
             raise NotImplementedError('Only 2 detector axes implemented')
@@ -103,7 +140,7 @@ class Experiment:
         ]
         pangs[self.num_sample_axes:, :, :] = (
             ang_hkl[self.num_sample_axes:, np.newaxis, np.newaxis] + np.arctan(
-                (pval / self.sample_detector_distance)
+                pval / self.sample_detector_distance
             ).to('degrees').magnitude
         )
         q = np.array(
@@ -117,12 +154,32 @@ class Experiment:
     def _shape2q_by_ang(
         self, center_ang: tuple[float], *args, **kwargs
     ) -> NDArray:
+        """_shape2q_by_ang.
+
+        Args:
+            center_ang (tuple[float]): center_ang
+            args:
+            kwargs:
+
+        Returns:
+            NDArray:
+        """
         center_hkl = self.experiment.Ang2HKL(*center_ang, mat=self.crystal)
         return self._shape2q_by_hkl(center_hkl, *args, **kwargs)
 
     def _shape2q_dispatcher(
         self, *args, mode: str = 'hkl', **kwargs
     ) -> NDArray:
+        """_shape2q_dispatcher.
+
+        Args:
+            args:
+            mode (str): mode
+            kwargs:
+
+        Returns:
+            NDArray:
+        """
         if mode == 'hkl':
             return self._shape2q_by_hkl(*args, **kwargs)
         elif mode == 'ang':
@@ -131,9 +188,26 @@ class Experiment:
             raise NotImplementedError
 
     def shape2q(self, *args, **kwargs) -> NDArray:
+        """shape2q.
+
+        Args:
+            args:
+            kwargs:
+
+        Returns:
+            NDArray:
+        """
         return self._shape2q_dispatcher(*args, **kwargs)
 
-    def hkl2ang(self, *args) -> tuple[float]:
+    def hkl2ang(self, *args) -> tuple[float, ...]:
+        """hkl2ang.
+
+        Args:
+            args:
+
+        Returns:
+            tuple[float, ...]:
+        """
         if isinstance(args[0], tuple):
             hkl = args[0]
         else:
@@ -147,6 +221,14 @@ class Experiment:
         return ang_hkl
 
     def ang2hkl(self, *args) -> tuple[float]:
+        """ang2hkl.
+
+        Args:
+            args:
+
+        Returns:
+            tuple[float]:
+        """
         if isinstance(args[0], tuple):
             ang = args[0]
         else:
@@ -154,11 +236,24 @@ class Experiment:
         return self.experiment.Ang2HKL(*ang, mat=self.crystal)
 
     def hkl2q(self, *hkl):
+        """hkl2q.
+
+        Args:
+            hkl:
+        """
         if not isinstance(hkl[0], tuple):
             hkl = tuple(hkl)
         return self.crystal.Q(*hkl)
 
     def ang2q(self, *args) -> tuple[float]:
+        """ang2q.
+
+        Args:
+            args:
+
+        Returns:
+            tuple[float]:
+        """
         if isinstance(args[0], tuple):
             ang = args[0]
         else:
@@ -166,6 +261,14 @@ class Experiment:
         return self.hkl2q(self.ang2hkl(ang))
 
     def q2hkl(self, *args) -> tuple[float]:
+        """q2hkl.
+
+        Args:
+            args:
+
+        Returns:
+            tuple[float]:
+        """
         if isinstance(args[0], tuple):
             q = args[0]
         else:
